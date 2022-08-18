@@ -1,0 +1,23 @@
+{
+  "name": "map-dl",
+  "version": "1.0.0",
+  "description": "A node app which scrapes appropriate websites to check for new cycling and public transit maps in the Greater Toronto and Hamilton Area.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cherche/map-dl.git"
+  },
+  "author": "Ryan Nguyen",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/cherche/map-dl/issues"
+  },
+  "homepage": "https://github.com/cherche/map-dl#readme",
+  "private": "true",
+  "dependencies": {
+    "puppeteer": "^16.1.1"
+  }
+}

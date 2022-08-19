@@ -3,6 +3,8 @@ const https = require('https')
 const fs = require('fs')
 const { exec } = require('child_process')
 
+const formulae = [require('./formulae/brampton-transit')]
+
 // See https://stackoverflow.com/a/22907134
 function download (url, dest, cb) {
   const file = fs.createWriteStream(dest, cb)
@@ -18,41 +20,26 @@ function download (url, dest, cb) {
   })
 }
 
-const url = 'https://www.brampton.ca/EN/residents/transit/plan-your-trip/Pages/Schedules-Maps-Covid.aspx'
-
-async function getFileUrl () {
-  const buttons = document.querySelectorAll('.jumbotron.transit .btn')
-  return buttons[1].href
-}
-
-function processFile (input) {
-  exec(`pdftoppm ${input} brampton-transit -png -f 1 -singlefile -r 300`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`)
-      return
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`)
-      return
-    }
-    //console.log(`stdout: ${stdout}`)
-  })
-}
-
 async function main () {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
 
-  await page.goto(url)
-  console.log(await page.title())
-  const fileUrl = await page.evaluate(getFileUrl)
-  console.log(fileUrl)
+  const f = formulae[0]
+  const a = f.actions[0]
 
-  download(fileUrl, 'brampton-transit.pdf', (err) => {
+  await page.goto(f.url)
+  // First download to cache
+  const downloadUrl = await page.evaluate(a.getDownloadUrl)
+  const downloadDest = `cache/${f.shortName}.${a.downloadExtension}`
+  download(downloadUrl, downloadDest, (err) => {
     if (err) return
-    processFile('brampton-transit.pdf')
+    // Then generate output
+    const d = new Date()
+    let outputDest = `output/${f.shortName}${d.getUTCFullYear()}${d.getUTCMonth()}`
+    if (a.outputSuffix) outputDest += `-${a.outputSuffix}`
+    const outputExtension = 'png'
+    a.generateOutput(downloadDest, outputDest, outputExtension)
   })
-
 
   await browser.close()
 }

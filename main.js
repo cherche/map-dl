@@ -20,13 +20,8 @@ function download (url, dest, cb) {
   })
 }
 
-async function main () {
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()
-
-  const f = formulae[0]
-  const a = f.actions[0]
-
+async function runFormulaWebscraper (f, page) {
+  const a = f.processes[0]
   await page.goto(f.url)
   // First download to cache
   const downloadUrl = await page.evaluate(a.getDownloadUrl)
@@ -35,11 +30,23 @@ async function main () {
     if (err) return
     // Then generate output
     const d = new Date()
-    let outputDest = `output/${f.shortName}${d.getUTCFullYear()}${d.getUTCMonth()}`
-    if (a.outputSuffix) outputDest += `-${a.outputSuffix}`
+    let output = `output/${f.shortName}${d.getUTCFullYear()}${d.getUTCMonth()}`
+    if (a.outputSuffix) output += `-${a.outputSuffix}`
     const outputExtension = 'png'
-    a.generateOutput(downloadDest, outputDest, outputExtension)
+    output += `.${outputExtension}`
+    a.generateOutput(downloadDest, output)
   })
+}
+
+async function main () {
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+
+  const f = formulae[0]
+
+  if (f.type === 'webscrape') {
+    await runFormulaWebscraper(f, page)
+  }
 
   await browser.close()
 }

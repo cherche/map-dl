@@ -2,12 +2,12 @@ const { exec } = require('child_process')
 
 function pdftoppm ({
   input,
-  output,
+  outputName,
   outputExtension,
   page,
   resolution
 }) {
-  exec(`pdftoppm ${input} ${output} -${outputExtension} -f ${page} -singlefile -r ${resolution}`)
+  exec(`pdftoppm ${input} ${outputName} -${outputExtension} -f ${page} -singlefile -r ${resolution}`)
 }
 
 module.exports = { pdftoppm }

@@ -20,22 +20,41 @@ function download (url, dest, cb) {
   })
 }
 
-async function runFormulaWebscraper (f, page) {
-  const a = f.processes[0]
-  await page.goto(f.url)
+function getMonthStamp () {
+  const d = new Date()
+  const [year, month] = d.toISOString().split('-')
+  return year + month
+}
+
+async function manageDownload ({ dl, formula, page }) {
   // First download to cache
-  const downloadUrl = await page.evaluate(a.getDownloadUrl)
-  const downloadDest = `cache/${f.shortName}.${a.downloadExtension}`
-  download(downloadUrl, downloadDest, (err) => {
+  const downloadUrl = await page.evaluate(dl.getUrl)
+  const downloadName = `${formula.shortName}.${dl.extension}`
+  download(downloadUrl, `cache/${downloadName}`, (err) => {
     if (err) return
     // Then generate output
-    const d = new Date()
-    let output = `output/${f.shortName}${d.getUTCFullYear()}${d.getUTCMonth()}`
-    if (a.outputSuffix) output += `-${a.outputSuffix}`
-    const outputExtension = 'png'
-    output += `.${outputExtension}`
-    a.generateOutput(downloadDest, output)
+    for (const o of dl.outputs) {
+      const d = new Date()
+      let output = `output/${formula.shortName}${getMonthStamp()}`
+      if (!o.omitId) output += `-${o.id}`
+      output += '.png'
+      o.generate(downloadDest, output)
+    }
   })
+}
+
+const formulaRunners = {
+  async webscrape ({ formula, page }) {
+    await page.goto(formula.scrapeUrl)
+
+    for (const dl of formula.downloads) {
+      await manageDownload({ dl, formula, page })
+    }
+  }
+}
+
+async function runFormula (options) {
+  await formulaRunners[options.formula.type](options)
 }
 
 async function main () {
@@ -44,10 +63,9 @@ async function main () {
 
   const f = formulae[0]
 
-  if (f.type === 'webscrape') {
-    await runFormulaWebscraper(f, page)
-  }
+  await runFormula({ formula: f, page })
 
   await browser.close()
 }
+
 main()

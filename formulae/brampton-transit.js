@@ -18,13 +18,9 @@ module.exports = {
           id: 'default',
           omitId: true,
           generate: (input, output) => {
-            const outputParts = output.split('.')
-            const outputName = outputParts.slice(0, -1).join('.')
-            const outputExtension = outputParts[outputParts.length - 1]
             filters.pdftoppm({
               input,
-              outputName,
-              outputExtension,
+              output,
               page: 1,
               resolution: 10
             })

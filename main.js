@@ -30,16 +30,31 @@ async function manageDownload ({ dl, formula, page }) {
   // First download to cache
   const downloadUrl = await page.evaluate(dl.getUrl)
   const downloadName = `${formula.shortName}.${dl.extension}`
-  download(downloadUrl, `cache/${downloadName}`, (err) => {
+  const downloadPath = `downloads/${downloadName}`
+  download(downloadUrl, downloadPath, (err) => {
     if (err) return
-    // Then generate output
-    for (const o of dl.outputs) {
-      const d = new Date()
-      let output = `output/${formula.shortName}${getMonthStamp()}`
-      if (!o.omitId) output += `-${o.id}`
-      output += '.png'
-      o.generate(downloadDest, output)
-    }
+
+    const cachePath = `cache/${downloadName}`
+    fs.stat(cachePath, (err, stat) => {
+      // If the download is the same as the cache, no update
+      // Hence no point in generating output (a rather costly operation)
+      if (err === null) {
+        //if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath))) return
+      }
+
+      // Move to cache
+      fs.rename(downloadPath, cachePath, (err) => {
+        if (err) return
+        // Then generate output
+        for (const o of dl.outputs) {
+          const d = new Date()
+          let output = `output/${formula.shortName}${getMonthStamp()}`
+          if (!o.omitId) output += `-${o.id}`
+          output += '.png'
+          o.generate(cachePath, output)
+        }
+      })
+    })
   })
 }
 

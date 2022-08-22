@@ -3,7 +3,7 @@ const https = require('https')
 const fs = require('fs')
 const fsPromises = fs.promises
 
-const formulae = [require('./formulae/brampton-transit')]
+const formulae = [require('./formulae/brampton-transit'), require('./formulae/uoft-campus')]
 
 const FORCE_OUTPUT = true
 
@@ -39,10 +39,8 @@ function getMonthStamp () {
   return year + month
 }
 
-async function manageDownload ({ dl, formula, page }) {
-  // First download to cache
-  const downloadUrl = await page.evaluate(dl.getUrl)
-  const downloadName = `${formula.shortName}.${dl.extension}`
+async function manageDownload ({ downloadUrl, downloadExtension, downloadOutputs, formula }) {
+  const downloadName = `${formula.shortName}.${downloadExtension}`
   const downloadPath = `downloads/${downloadName}`
   await downloadPromise(downloadUrl, downloadPath)
 
@@ -56,11 +54,22 @@ async function manageDownload ({ dl, formula, page }) {
     await fsPromises.rename(downloadPath, cachePath)
   }
 
-  for (const o of dl.outputs) {
+  for (const o of downloadOutputs) {
     const idStamp =  (o.omitId) ? '' : `-${o.id}`
     const output = `output/${formula.shortName}${getMonthStamp()}${idStamp}.png`
     o.generate(cachePath, output)
   }
+}
+
+async function manageWebscrapeDownload ({ dl, formula, page }) {
+  // First download to cache
+  const downloadUrl = await page.evaluate(dl.getUrl)
+  manageDownload({
+    downloadUrl,
+    downloadExtension: dl.extension,
+    downloadOutputs: dl.outputs,
+    formula
+  })
 }
 
 const formulaRunners = {
@@ -69,7 +78,7 @@ const formulaRunners = {
 
     for (const dl of formula.downloads) {
       try {
-        await manageDownload({ dl, formula, page })
+        await manageWebscrapeDownload({ dl, formula, page })
       } catch (err) {
         console.log('Download failed!', {
           formulaName: formula.name,
@@ -77,6 +86,23 @@ const formulaRunners = {
           downloadUrl: dl.url
         })
       }
+    }
+  },
+  async static ({ formula }) {
+    const dl = formula.download
+    try {
+      await manageDownload({
+        downloadUrl: dl.url,
+        downloadExtension: dl.extension,
+        downloadOutputs: dl.outputs,
+        formula
+      })
+    } catch (err) {
+      console.log('Download failed!', {
+        formulaName: formula.name,
+        formulaType: formula.type,
+        downloadUrl: dl.url
+      })
     }
   }
 }
@@ -86,6 +112,7 @@ async function runFormula (options) {
 }
 
 async function main () {
+  // Check if there are any webscrape formulae before launching puppeteer
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
 

@@ -49,9 +49,13 @@ function getMonthStamp () {
   return year + month
 }
 
-async function manageDownload ({ downloadUrl, downloadExtension, downloadOmitId, downloadId, downloadOutputs, formula }) {
-  const downloadIdStamp =  (downloadOmitId) ? '' : `-${downloadId}`
-  const downloadName = `${formula.shortName}${downloadIdStamp}.${downloadExtension}`
+// We take downloadUrl separately because of the different structures
+// on formulae of type 'static' and type 'webscrape'.
+// Another, more hacky, way is to mutate the formula so that for 'webscrape's,
+//  formula.download.url = await await page.evaluate(formula.download.getUrl)
+async function manageDownload ({ downloadUrl, dl, formula }) {
+  const downloadIdStamp =  (dl.omitId) ? '' : `-${dl.id}`
+  const downloadName = `${formula.shortName}${downloadIdStamp}.${dl.extension}`
   const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   await downloadPromise(downloadUrl, downloadPath)
 
@@ -65,7 +69,7 @@ async function manageDownload ({ downloadUrl, downloadExtension, downloadOmitId,
     await fsPromises.rename(downloadPath, cachePath)
   }
 
-  for (const o of downloadOutputs) {
+  for (const o of dl.outputs) {
     const outputIdStamp =  (o.omitId) ? '' : `-${o.id}`
     const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
     o.generate(cachePath, output)
@@ -77,10 +81,7 @@ async function manageWebscrapeDownload ({ dl, formula, page }) {
   const downloadUrl = await page.evaluate(dl.getUrl)
   manageDownload({
     downloadUrl,
-    downloadExtension: dl.extension,
-    downloadOutputs: dl.outputs,
-    downloadOmitId: dl.omitId,
-    downloadId: dl.id,
+    dl,
     formula
   })
 }
@@ -104,14 +105,7 @@ const formulaRunners = {
   async static ({ formula }) {
     const dl = formula.download
     try {
-      await manageDownload({
-        downloadUrl: dl.url,
-        downloadExtension: dl.extension,
-        downloadOutputs: dl.outputs,
-        downloadId: dl.id,
-        downloadOmitId: dl.omitId,
-        formula
-      })
+      await manageDownload({ downloadUrl: dl.url, dl, formula })
     } catch (err) {
       console.log('Download failed!', {
         formulaName: formula.name,

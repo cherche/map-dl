@@ -54,7 +54,7 @@ function getMonthStamp () {
 // Another, more hacky, way is to mutate the formula so that for 'webscrape's,
 //  formula.download.url = await await page.evaluate(formula.download.getUrl)
 async function manageDownload ({ downloadUrl, dl, formula }) {
-  const downloadIdStamp =  (dl.omitId) ? '' : `-${dl.id}`
+  const downloadIdStamp = (dl.omitId) ? '' : `-${dl.id}`
   const downloadName = `${formula.shortName}${downloadIdStamp}.${dl.extension}`
   const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   await downloadPromise(downloadUrl, downloadPath)
@@ -70,7 +70,7 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   }
 
   for (const o of dl.outputs) {
-    const outputIdStamp =  (o.omitId) ? '' : `-${o.id}`
+    const outputIdStamp = (o.omitId) ? '' : `-${o.id}`
     const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
     o.generate(cachePath, output)
   }

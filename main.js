@@ -49,8 +49,9 @@ function getMonthStamp () {
   return year + month
 }
 
-async function manageDownload ({ downloadUrl, downloadExtension, downloadOutputs, formula }) {
-  const downloadName = `${formula.shortName}.${downloadExtension}`
+async function manageDownload ({ downloadUrl, downloadExtension, downloadOmitId, downloadId, downloadOutputs, formula }) {
+  const downloadIdStamp =  (downloadOmitId) ? '' : `-${downloadId}`
+  const downloadName = `${formula.shortName}${downloadIdStamp}.${downloadExtension}`
   const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   await downloadPromise(downloadUrl, downloadPath)
 
@@ -65,8 +66,8 @@ async function manageDownload ({ downloadUrl, downloadExtension, downloadOutputs
   }
 
   for (const o of downloadOutputs) {
-    const idStamp =  (o.omitId) ? '' : `-${o.id}`
-    const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${idStamp}.png`
+    const outputIdStamp =  (o.omitId) ? '' : `-${o.id}`
+    const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
     o.generate(cachePath, output)
   }
 }
@@ -78,6 +79,8 @@ async function manageWebscrapeDownload ({ dl, formula, page }) {
     downloadUrl,
     downloadExtension: dl.extension,
     downloadOutputs: dl.outputs,
+    downloadOmitId: dl.omitId,
+    downloadId: dl.id,
     formula
   })
 }
@@ -105,6 +108,8 @@ const formulaRunners = {
         downloadUrl: dl.url,
         downloadExtension: dl.extension,
         downloadOutputs: dl.outputs,
+        downloadId: dl.id,
+        downloadOmitId: dl.omitId,
         formula
       })
     } catch (err) {

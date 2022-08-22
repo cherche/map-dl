@@ -8,9 +8,10 @@ module.exports = {
   scrapeUrl: 'https://www.brampton.ca/EN/residents/transit/plan-your-trip/Pages/Schedules-Maps-Covid.aspx',
   downloads: [
     {
+      id: 'default',
+      omitId: true,
       getUrl () {
-        const buttons = document.querySelectorAll('.jumbotron.transit .btn')
-        return buttons[1].href
+        return document.querySelectorAll('.jumbotron.transit .btn')[1].href
       },
       extension: 'pdf',
       outputs: [
@@ -22,7 +23,7 @@ module.exports = {
               input,
               output,
               page: 1,
-              resolution: 10
+              resolution: 200
             })
           }
         }

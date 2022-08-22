@@ -5,6 +5,8 @@ module.exports = {
   shortName: 'UofTCampus',
   type: 'static',
   download: {
+    id: 'default',
+    omitId: true,
     url: 'https://www.utoronto.ca/__shared/assets/3D_Map1103.pdf',
     extension: 'pdf',
     outputs: [
@@ -16,7 +18,7 @@ module.exports = {
             input,
             output,
             page: 1,
-            resolution: 10
+            resolution: 300
           })
         }
       }

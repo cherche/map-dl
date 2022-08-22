@@ -1,11 +1,21 @@
-const puppeteer = require('puppeteer')
 const https = require('https')
 const fs = require('fs')
 const fsPromises = fs.promises
 
-const formulae = [require('./formulae/brampton-transit'), require('./formulae/uoft-campus')]
-
 const FORCE_OUTPUT = true
+// Might want to sanitize FORMULAE_DIR if taking it as an argument
+const FORMULAE_DIR = './formulae'
+const DOWNLOADS_DIR = './downloads'
+const CACHE_DIR = './cache'
+const OUTPUT_DIR = './output'
+
+// Can't believe it's this easy to import all the formulae
+const formulae = []
+fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
+  if (formulaName.endsWith('.js')) {
+    formulae.push(require(`${FORMULAE_DIR}/${formulaName}`))
+  }
+})
 
 // See https://stackoverflow.com/a/22907134
 function download (url, dest, cb) {
@@ -41,10 +51,10 @@ function getMonthStamp () {
 
 async function manageDownload ({ downloadUrl, downloadExtension, downloadOutputs, formula }) {
   const downloadName = `${formula.shortName}.${downloadExtension}`
-  const downloadPath = `downloads/${downloadName}`
+  const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   await downloadPromise(downloadUrl, downloadPath)
 
-  const cachePath = `cache/${downloadName}`
+  const cachePath = `${CACHE_DIR}/${downloadName}`
   try {
     await fsPromises.stat(cachePath)
     // download precisely matches cache---so there's nothing new to bother with
@@ -56,7 +66,7 @@ async function manageDownload ({ downloadUrl, downloadExtension, downloadOutputs
 
   for (const o of downloadOutputs) {
     const idStamp =  (o.omitId) ? '' : `-${o.id}`
-    const output = `output/${formula.shortName}${getMonthStamp()}${idStamp}.png`
+    const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${idStamp}.png`
     o.generate(cachePath, output)
   }
 }
@@ -113,14 +123,25 @@ async function runFormula (options) {
 
 async function main () {
   // Check if there are any webscrape formulae before launching puppeteer
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()
+  // In fact, we check before even importing it!
+  if (formulae.some(formula => formula.type === 'webscrape')) {
+    const puppeteer = require('puppeteer')
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
 
-  for (const formula of formulae) {
-    await runFormula({ formula, page })
+    for (const formula of formulae) {
+      await runFormula({ formula, page })
+    }
+
+    await browser.close()
+    return
   }
 
-  await browser.close()
+  // Otherwise, completely skip puppeteer :D
+  for (const formula of formulae) {
+    // Static formulae are blazingly fast!
+    await runFormula({ formula })
+  }
 }
 
 main()

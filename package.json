@@ -18,6 +18,7 @@
   "homepage": "https://github.com/cherche/map-dl#readme",
   "private": "true",
   "dependencies": {
-    "puppeteer": "^16.1.1"
+    "puppeteer": "^16.1.1",
+    "tmp": "^0.2.1"
   }
 }

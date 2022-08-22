@@ -11,7 +11,7 @@ async function pdftoppm ({
 }) {
   const tmpPath = tmp.tmpNameSync('tmp')
   await exec(`pdftoppm ${input} ${tmpPath} -png -f ${page} -singlefile -r ${resolution}`)
-  fs.rename(`${tmpPath}.png`, output, err => console.log(err))
+  fs.renameSync(`${tmpPath}.png`, output, err => console.log(err))
 }
 
 module.exports = { pdftoppm }

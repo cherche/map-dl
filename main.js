@@ -24,7 +24,7 @@ fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
 // See https://stackoverflow.com/a/22907134
 function download (url, dest, cb) {
   // Force https protocol (if http fails, we'll just give up)
-  url = url.replace(/^http\:/, 'https:')
+  url = url.replace(/^http:/, 'https:')
 
   const file = fs.createWriteStream(dest, cb)
   https.get(url, (response) => {

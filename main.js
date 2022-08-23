@@ -16,12 +16,16 @@ const OUTPUT_DIR = './output'
 const formulae = []
 fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
   if (formulaName.endsWith('.js')) {
+    console.log('Loading formula', formulaName)
     formulae.push(require(`${FORMULAE_DIR}/${formulaName}`))
   }
 })
 
 // See https://stackoverflow.com/a/22907134
 function download (url, dest, cb) {
+  // Force https protocol (if http fails, we'll just give up)
+  url = url.replace(/^http\:/, 'https:')
+
   const file = fs.createWriteStream(dest, cb)
   https.get(url, (response) => {
     response.pipe(file)
@@ -38,6 +42,7 @@ function downloadPromise (url, dest) {
   return new Promise((resolve, reject) => {
     download(url, dest, (err) => {
       if (err) {
+        console.log(err)
         reject(err)
         return
       }
@@ -64,13 +69,17 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   const cachePath = `${CACHE_DIR}/${downloadName}`
 
   if (!SKIP_DOWNLOAD) {
+    console.log([`${formula.name}[${dl.id}]`], 'Downloading', { downloadUrl })
     await downloadPromise(downloadUrl, downloadPath)
   }
 
   try {
     await fsPromises.stat(cachePath)
     // download precisely matches cache---so there's nothing new to bother with
-    if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath)) && !FORCE_OUTPUT) return
+    if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath)) && !FORCE_OUTPUT) {
+      console.log([`${formula.name}[${dl.id}]`], 'Skipping since exact match found in cache')
+      return
+    }
   } catch (err) {
     // file with download name does not exist in cache
     // warning: will run into issues if there is nothing in cache
@@ -82,6 +91,10 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   for (const o of dl.outputs) {
     const outputIdStamp = (o.omitId) ? '' : `-${o.id}`
     const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
+    console.log([`${formula.name}[${dl.id}][${o.id}]`], 'Generating output', {
+      input: cachePath,
+      output
+    })
     o.generate(cachePath, output)
   }
 }
@@ -109,6 +122,7 @@ const formulaRunners = {
           formulaType: formula.type,
           downloadUrl: dl.url
         })
+        console.log(err)
       }
     }
   },
@@ -122,6 +136,7 @@ const formulaRunners = {
         formulaType: formula.type,
         downloadUrl: dl.url
       })
+      console.log(err)
     }
   }
 }

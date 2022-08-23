@@ -2,8 +2,11 @@ const https = require('https')
 const fs = require('fs')
 const fsPromises = fs.promises
 
-const FORCE_OUTPUT = true
-// Might want to sanitize FORMULAE_DIR if taking it as an argument
+const FORCE_OUTPUT = false
+const SKIP_DOWNLOAD = false
+// It is important that these are formatted correctly
+// Need ./ before formulae_dir
+// May or may not need to omit / at the end (honestly not sure)
 const FORMULAE_DIR = './formulae'
 const DOWNLOADS_DIR = './downloads'
 const CACHE_DIR = './cache'
@@ -56,17 +59,24 @@ function getMonthStamp () {
 async function manageDownload ({ downloadUrl, dl, formula }) {
   const downloadIdStamp = (dl.omitId) ? '' : `-${dl.id}`
   const downloadName = `${formula.shortName}${downloadIdStamp}.${dl.extension}`
-  const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
-  await downloadPromise(downloadUrl, downloadPath)
 
+  const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   const cachePath = `${CACHE_DIR}/${downloadName}`
+
+  if (!SKIP_DOWNLOAD) {
+    await downloadPromise(downloadUrl, downloadPath)
+  }
+
   try {
     await fsPromises.stat(cachePath)
     // download precisely matches cache---so there's nothing new to bother with
     if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath)) && !FORCE_OUTPUT) return
   } catch (err) {
     // file with download name does not exist in cache
-    await fsPromises.rename(downloadPath, cachePath)
+    // warning: will run into issues if there is nothing in cache
+    if (!SKIP_DOWNLOAD) {
+      await fsPromises.rename(downloadPath, cachePath)
+    }
   }
 
   for (const o of dl.outputs) {

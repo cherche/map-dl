@@ -2,7 +2,7 @@
   "name": "map-dl",
   "version": "1.0.0",
   "description": "A formula-based web scraper, made to download and convert cycling and public transit maps in the Greater Toronto and Hamilton Area.",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "flush": "rm downloads/*; rm cache/*"

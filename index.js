@@ -7,7 +7,7 @@ const { getMonthStamp } = require('./js/filename-utils')
 // If SKIP_DOWNLOAD is true, avoid all possible downloads
 // Output will be produced only for new downloads
 // This is great for debugging only specific downloads
-const SKIP_DOWNLOAD = true /* default: false */
+const SKIP_DOWNLOAD = false /* default: false */
 // If FORCE_OUTPUT is true, emit an output regardless
 // of whether the download is new or not
 // This is great for debugging output generators
@@ -19,7 +19,7 @@ const FORCE_OUTPUT = false /* default: false */
 // It is important that these paths are formatted correctly
 // Need ./ before formulae_dir
 // May or may not need to omit / at the end (honestly not sure)
-const FORMULAE_DIR = './formulae-active'
+const FORMULAE_DIR = './formulae'
 const DOWNLOADS_DIR = './downloads'
 const CACHE_DIR = './cache'
 const OUTPUT_DIR = './output'

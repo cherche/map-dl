@@ -1,13 +1,25 @@
-const https = require('https')
 const fs = require('fs')
 const fsPromises = fs.promises
+const { log } = require('./js/loggers')
+const { downloadPromise } = require('./js/download')
+const { getMonthStamp } = require('./js/filename-utils')
 
-const FORCE_OUTPUT = false
-const SKIP_DOWNLOAD = false
-// It is important that these are formatted correctly
+// If SKIP_DOWNLOAD is true, avoid all possible downloads
+// Output will be produced only for new downloads
+// This is great for debugging only specific downloads
+const SKIP_DOWNLOAD = true /* default: false */
+// If FORCE_OUTPUT is true, emit an output regardless
+// of whether the download is new or not
+// This is great for debugging output generators
+const FORCE_OUTPUT = false /* default: false */
+// Notice what this means if SKIP_DOWNLOAD and FORCE_OUTPUT are both true
+// In this case, every output is produced with no "unnecessary" downloads
+// This is great for debugging certain downloads AND their output generators
+
+// It is important that these paths are formatted correctly
 // Need ./ before formulae_dir
 // May or may not need to omit / at the end (honestly not sure)
-const FORMULAE_DIR = './formulae'
+const FORMULAE_DIR = './formulae-active'
 const DOWNLOADS_DIR = './downloads'
 const CACHE_DIR = './cache'
 const OUTPUT_DIR = './output'
@@ -21,42 +33,6 @@ fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
   }
 })
 
-// See https://stackoverflow.com/a/22907134
-function download (url, dest, cb) {
-  // Force https protocol (if http fails, we'll just give up)
-  url = url.replace(/^http:/, 'https:')
-
-  const file = fs.createWriteStream(dest, cb)
-  https.get(url, (response) => {
-    response.pipe(file)
-    file.on('finish', () => {
-      file.close(cb)
-    }) // close() is async, call cb after close completes.
-  }).on('error', (err) => {
-    fs.unlink(dest, cb) // Delete the file async. (But we don't check the result)
-    if (cb) cb(err.message)
-  })
-}
-
-function downloadPromise (url, dest) {
-  return new Promise((resolve, reject) => {
-    download(url, dest, (err) => {
-      if (err) {
-        console.log(err)
-        reject(err)
-        return
-      }
-      resolve()
-    })
-  })
-}
-
-function getMonthStamp () {
-  const d = new Date()
-  const [year, month] = d.toISOString().split('-')
-  return year + month
-}
-
 // We take downloadUrl separately because of the different structures
 // on formulae of type 'static' and type 'webscrape'.
 // Another, more hacky, way is to mutate the formula so that for 'webscrape's,
@@ -68,33 +44,54 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   const cachePath = `${CACHE_DIR}/${downloadName}`
 
-  if (!SKIP_DOWNLOAD) {
-    console.log([`${formula.name}[${dl.id}]`], 'Downloading', { downloadUrl })
-    await downloadPromise(downloadUrl, downloadPath)
+  let skipDownload = false
+  let emitOutput = true
+
+  if (SKIP_DOWNLOAD) {
+    try {
+      await fsPromises.stat(cachePath)
+      log('SKIP_DOWNLOAD=true. Using available cache instead of downloading.', { formula, dl })
+      skipDownload = true
+      emitOutput = false
+    } catch (err) {
+      // Even if SKIP_DOWNLOAD is set to true, we will only skip download,
+      // if there it already exists in cache. This ensures it is possible
+      // to produce an output if desired.
+      // Really, SKIP_DOWNLOAD means "skip download if already in cache"
+    }
   }
 
-  try {
-    await fsPromises.stat(cachePath)
-    // download precisely matches cache---so there's nothing new to bother with
-    if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath)) && !FORCE_OUTPUT) {
-      console.log([`${formula.name}[${dl.id}]`], 'Skipping since exact match found in cache')
-      return
-    }
-  } catch (err) {
-    // file with download name does not exist in cache
-    // warning: will run into issues if there is nothing in cache
-    if (!SKIP_DOWNLOAD) {
+  if (!skipDownload) {
+    log('Downloading', { downloadUrl }, { formula, dl })
+    await downloadPromise(downloadUrl, downloadPath)
+
+    try {
+      if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath))) {
+        log('Leaving as-is; download matches cache (no updates)', { formula, dl })
+        // Since download precisely matches cache, avoid emitting output (unless forced)
+        emitOutput = false
+      } else {
+        log('Overwriting cache with updated download', { formula, dl })
+        await fsPromises.rename(downloadPath, cachePath)
+      }
+    } catch (err) {
+      // Notice that we already downloaded to downloadPath, hence any error arising
+      // in the try-block above must be due to `fs.readFileSync(cachePath)`
+      log('Moving new download to cache', { formula, dl })
       await fsPromises.rename(downloadPath, cachePath)
     }
   }
 
+  // Could expand with De Morgan's laws ... but I think this is easier to understand!
+  if (!(emitOutput || FORCE_OUTPUT)) return
+
   for (const o of dl.outputs) {
     const outputIdStamp = (o.omitId) ? '' : `-${o.id}`
     const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
-    console.log([`${formula.name}[${dl.id}][${o.id}]`], 'Generating output', {
+    log('Generating output', {
       input: cachePath,
       output
-    })
+    }, { formula, dl, o })
     o.generate(cachePath, output)
   }
 }

@@ -17,6 +17,7 @@ const FORCE_OUTPUT = config.forceOutput
 // Notice what this means if SKIP_DOWNLOAD and FORCE_OUTPUT are both true
 // In this case, every output is produced with no "unnecessary" downloads
 // This is great for debugging certain downloads AND their output generators
+const KEEP_DOWNLOADS = config.keepDownloads
 
 // It is important that these paths are formatted correctly
 // Need ./ before formulae_dir
@@ -78,6 +79,11 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
         log('Leaving as-is; download matches cache (no updates)', { formula, dl })
         // Since download precisely matches cache, avoid emitting output (unless forced)
         emitOutput = false
+        if (!KEEP_DOWNLOADS) {
+          // Get rid of the download to save storage space
+          log('Deleting download to save space', { formula, dl })
+          await fsPromises.unlink(downloadPath)
+        }
       } else {
         log('Overwriting cache with updated download', { formula, dl })
         await fsPromises.rename(downloadPath, cachePath)

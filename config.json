@@ -1,0 +1,8 @@
+{
+  "skipDownload": false,
+  "forcePutput": false,
+  "formulaeDir": "./formulae",
+  "downloadsDir": "./downloads",
+  "cacheDir": "./cache",
+  "outputDir": "./output"
+}

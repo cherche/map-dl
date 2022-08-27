@@ -4,14 +4,16 @@ const { log } = require('./js/loggers')
 const { downloadPromise } = require('./js/download')
 const { getMonthStamp } = require('./js/filename-utils')
 
+const config = require('./config.json')
+
 // If SKIP_DOWNLOAD is true, avoid all possible downloads
 // Output will be produced only for new downloads
 // This is great for debugging only specific downloads
-const SKIP_DOWNLOAD = false /* default: false */
+const SKIP_DOWNLOAD = config.skipDownload
 // If FORCE_OUTPUT is true, emit an output regardless
 // of whether the download is new or not
 // This is great for debugging output generators
-const FORCE_OUTPUT = false /* default: false */
+const FORCE_OUTPUT = config.forceOutput
 // Notice what this means if SKIP_DOWNLOAD and FORCE_OUTPUT are both true
 // In this case, every output is produced with no "unnecessary" downloads
 // This is great for debugging certain downloads AND their output generators
@@ -19,10 +21,10 @@ const FORCE_OUTPUT = false /* default: false */
 // It is important that these paths are formatted correctly
 // Need ./ before formulae_dir
 // May or may not need to omit / at the end (honestly not sure)
-const FORMULAE_DIR = './formulae'
-const DOWNLOADS_DIR = './downloads'
-const CACHE_DIR = './cache'
-const OUTPUT_DIR = './output'
+const FORMULAE_DIR = config.formulaeDir || './formulae'
+const DOWNLOADS_DIR = config.downloadsDir || './downloads'
+const CACHE_DIR = config.cacheDir || './cache'
+const OUTPUT_DIR = config.outputDir || './output'
 
 // Can't believe it's this easy to import all the formulae
 const formulae = []

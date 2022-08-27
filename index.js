@@ -65,7 +65,13 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
 
   if (!skipDownload) {
     log('Downloading', { downloadUrl }, { formula, dl })
-    await downloadPromise(downloadUrl, downloadPath)
+    try {
+      await downloadPromise(downloadUrl, downloadPath)
+    } catch (err) {
+      // If a download fails, the other downloads can still keep going!
+      log('ERROR:', err, { formula, dl })
+      return
+    }
 
     try {
       if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath))) {

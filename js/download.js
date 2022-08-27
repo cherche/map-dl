@@ -1,14 +1,16 @@
 const https = require('https')
-const http = require('http')
 const fs = require('fs')
 
 // See https://stackoverflow.com/a/22907134
 function download (url, dest, cb) {
-  let protocol = https
-  if (url.startsWith('http://')) protocol = http
+  // I tried to use http with such urls but for whatever reason
+  // the stream would always end up empty! I swear http and https
+  // had the same interface. What gives???
+  // So for now, we will just force https instead
+  url = url.replace(/^http:/, 'https:')
 
   const file = fs.createWriteStream(dest, cb)
-  protocol.get(url, (response) => {
+  https.get(url, (response) => {
     response.pipe(file)
     file.on('finish', () => {
       file.close(cb)

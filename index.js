@@ -53,7 +53,7 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   if (SKIP_DOWNLOAD) {
     try {
       await fsPromises.stat(cachePath)
-      log('SKIP_DOWNLOAD=true. Using available cache instead of downloading.', { formula, dl })
+      log('Using available cache instead of downloading (skipDownload=true)', { formula, dl })
       skipDownload = true
       emitOutput = false
     } catch (err) {
@@ -81,7 +81,7 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
         emitOutput = false
         if (!KEEP_DOWNLOADS) {
           // Get rid of the download to save storage space
-          log('Deleting download to save space', { formula, dl })
+          log('Deleting download to save space (keepDownloads=false)', { formula, dl })
           await fsPromises.unlink(downloadPath)
         }
       } else {

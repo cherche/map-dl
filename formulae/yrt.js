@@ -32,7 +32,7 @@ module.exports = {
     {
       id: 'Viva',
       getUrl () {
-        return document.querySelectorAll('#printAreaContent div > ul > li > a')[1].href
+        return document.querySelectorAll('#printAreaContent div > ul > li > a')[2].href
       },
       extension: 'pdf',
       outputs: [

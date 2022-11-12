@@ -5,13 +5,14 @@ module.exports = {
   shortName: 'HSR',
   site: 'https://www.hamilton.ca/hsr-bus-schedules-fares',
   type: 'webscrape',
-  scrapeUrl: 'https://www.hamilton.ca/hsr-bus-schedules-fares/schedule-routes-maps',
+  // Why did the Hamilton website remove the HSR System Map 💔
+  scrapeUrl: 'https://moovitapp.com/index/en/public_transit-Offline_maps_HSR_System_Map-map-Toronto_ON-143-902',
   downloads: [
     {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelector('.pane-content table.views-view-grid tr.row-2 td.col-2 a').href
+        return document.querySelector('a[data-automation="download-button"]').href
       },
       extension: 'pdf',
       outputs: [

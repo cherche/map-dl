@@ -11,7 +11,7 @@ module.exports = {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelectorAll('#printAreaContent div > ul > li > a')[0].href
+        return document.querySelectorAll('#printAreaContent div > ul > li > a')[2].href
       },
       extension: 'pdf',
       outputs: [

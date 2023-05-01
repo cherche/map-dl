@@ -11,7 +11,7 @@ module.exports = {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelectorAll('.jumbotron.transit .btn')[1].href
+        return document.querySelectorAll('.jumbotron.transit .btn')[0].href
       },
       extension: 'pdf',
       outputs: [

@@ -36,6 +36,54 @@ fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
   }
 })
 
+async function manageUrlDownload ({ downloadUrl, dl, formula, downloadPath, cachePath }) {
+  log('Downloading', { downloadUrl }, { formula, dl })
+  try {
+    await downloadPromise(downloadUrl, downloadPath)
+  } catch (err) {
+    // If a download fails, the other downloads can still keep going!
+    log('ERROR:', err, { formula, dl })
+    return
+  }
+
+  try {
+    if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath))) {
+      log('Leaving as-is; download matches cache (no updates)', { formula, dl })
+      // Since download precisely matches cache, avoid emitting output (unless forced)
+      emitOutput = false
+      if (!KEEP_DOWNLOADS) {
+        // Get rid of the download to save storage space
+        log('Deleting download to save space (keepDownloads=false)', { formula, dl })
+        await fsPromises.unlink(downloadPath)
+      }
+    } else {
+      log('Overwriting cache with updated download', { formula, dl })
+      await fsPromises.rename(downloadPath, cachePath)
+    }
+  } catch (err) {
+    // Notice that we already downloaded to downloadPath, hence any error arising
+    // in the try-block above must be due to `fs.readFileSync(cachePath)`
+    log('Moving new download to cache', { formula, dl })
+    await fsPromises.rename(downloadPath, cachePath)
+  }
+}
+
+async function generateOutput ({ formula, dl, downloadIdStamp,  input, o }) {
+  const outputIdStamp = (o.omitId) ? '' : `-${o.id}`
+  const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
+  log('Generating output', {
+    input,
+    output
+  }, { formula, dl, o })
+  o.generate(input, output)
+
+  // TODO: Set creation/modification date many years in the past
+  // so that maps do not clutter recent photos on phone.
+  // Might need to convert o.generate into an async function
+  // since the output must be generated before we can set the modified time.
+  // Of course, maybe there's a way to set the time WHEN it's generated?
+}
+
 // We take downloadUrl separately because of the different structures
 // on formulae of type 'static' and type 'webscrape'.
 // Another, more hacky, way is to mutate the formula so that for 'webscrape's,
@@ -65,51 +113,22 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   }
 
   if (!skipDownload) {
-    log('Downloading', { downloadUrl }, { formula, dl })
-    try {
-      await downloadPromise(downloadUrl, downloadPath)
-    } catch (err) {
-      // If a download fails, the other downloads can still keep going!
-      log('ERROR:', err, { formula, dl })
-      return
-    }
-
-    try {
-      if (fs.readFileSync(downloadPath).equals(fs.readFileSync(cachePath))) {
-        log('Leaving as-is; download matches cache (no updates)', { formula, dl })
-        // Since download precisely matches cache, avoid emitting output (unless forced)
-        emitOutput = false
-        if (!KEEP_DOWNLOADS) {
-          // Get rid of the download to save storage space
-          log('Deleting download to save space (keepDownloads=false)', { formula, dl })
-          await fsPromises.unlink(downloadPath)
-        }
-      } else {
-        log('Overwriting cache with updated download', { formula, dl })
-        await fsPromises.rename(downloadPath, cachePath)
-      }
-    } catch (err) {
-      // Notice that we already downloaded to downloadPath, hence any error arising
-      // in the try-block above must be due to `fs.readFileSync(cachePath)`
-      log('Moving new download to cache', { formula, dl })
-      await fsPromises.rename(downloadPath, cachePath)
-    }
+    // TODO: Find better way to hand off these variables to extracted functions
+    // This structure suggests that we should probably be using a class ...
+    await manageUrlDownload({
+      downloadUrl,
+      dl,
+      formula,
+      downloadPath,
+      cachePath
+    })
   }
 
   // Could expand with De Morgan's laws ... but I think this is easier to understand!
   if (!(emitOutput || FORCE_OUTPUT)) return
 
   for (const o of dl.outputs) {
-    const outputIdStamp = (o.omitId) ? '' : `-${o.id}`
-    const output = `${OUTPUT_DIR}/${formula.shortName}${getMonthStamp()}${downloadIdStamp}${outputIdStamp}.png`
-    log('Generating output', {
-      input: cachePath,
-      output
-    }, { formula, dl, o })
-    o.generate(cachePath, output)
-
-    // TODO: Set creation/modification date many years in the past
-    // so that maps do not clutter recent photos on phone
+    await generateOutput ({ formula, dl, downloadIdStamp, input: cachePath, o })
   }
 }
 

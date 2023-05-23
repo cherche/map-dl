@@ -3,15 +3,15 @@ const filters = require('../filters')
 module.exports = {
   name: 'cycling-mississauga',
   shortName: 'Mississauga',
-  site: 'https://www.mississaugabikes.ca/',
+  site: 'https://mississauga.ca/services-and-programs/transportation-and-streets/cycling/',
   type: 'webscrape',
-  scrapeUrl: 'https://www.mississaugabikes.ca/cycling-map/',
+  scrapeUrl: 'https://www.mississauga.ca/services-and-programs/transportation-and-streets/cycling/cycling-map/',
   downloads: [
     {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelectorAll('.wpb_wrapper h4')[1].querySelector('a').href
+        return Array.from(document.querySelectorAll('a.btn')).find(el => el.textContent === 'Download map').href
       },
       extension: 'pdf',
       outputs: [

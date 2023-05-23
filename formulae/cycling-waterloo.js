@@ -10,16 +10,10 @@ module.exports = {
     {
       id: 'Rural',
       getUrl () {
-        const headings = document.querySelectorAll('#printArea h3')
-        const mapHeading = Array.from(headings).filter((el) => {
-          return el.textContent === 'Region of Waterloo Bike Map'
-        })[0]
-        let sibling = mapHeading
-        while (sibling.tagName !== 'UL') {
-          sibling = sibling.nextElementSibling
-        }
-        const mapLinks = sibling.querySelectorAll('li a')
-        return mapLinks[0].href
+        const accordion = Array.from(document.querySelectorAll('.Accordion'))
+          .find(el => el.querySelector('.AccordionTrigger h2 a').name === 'Region-of-Waterloo-Bike-Map')
+        const mapLinks = Array.from(accordion.querySelectorAll('.AccordionContent ul li a'), a => a.href)
+        return mapLinks[0]
       },
       extension: 'pdf',
       outputs: [
@@ -40,16 +34,10 @@ module.exports = {
     {
       id: 'Urban',
       getUrl () {
-        const headings = document.querySelectorAll('#printArea h3')
-        const mapHeading = Array.from(headings).filter((el) => {
-          return el.textContent === 'Region of Waterloo Bike Map'
-        })[0]
-        let sibling = mapHeading
-        while (sibling.tagName !== 'UL') {
-          sibling = sibling.nextElementSibling
-        }
-        const mapLinks = sibling.querySelectorAll('li a')
-        return mapLinks[1].href
+        const accordion = Array.from(document.querySelectorAll('.Accordion'))
+          .find(el => el.querySelector('.AccordionTrigger h2 a').name === 'Region-of-Waterloo-Bike-Map')
+        const mapLinks = Array.from(accordion.querySelectorAll('.AccordionContent ul li a'), a => a.href)
+        return mapLinks[1]
       },
       extension: 'pdf',
       outputs: [

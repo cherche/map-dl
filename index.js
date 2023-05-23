@@ -107,6 +107,9 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
       output
     }, { formula, dl, o })
     o.generate(cachePath, output)
+
+    // TODO: Set creation/modification date many years in the past
+    // so that maps do not clutter recent photos on phone
   }
 }
 

@@ -11,7 +11,9 @@ module.exports = {
       id: 'default',
       omitId: true,
       getUrl () {
-        const srcSet = document.querySelector('img[alt="System Map"]').srcset.split(', ')
+        const map = Array.from(document.querySelectorAll('#main img'))
+          .filter(img => img.src.includes('system-map'))[0]
+        const srcSet = map.srcset.split(', ')
         // e.g. "https://example.com/image.png 640w" => "https://example.com/image.png"
         const urls = srcSet.map(srcPair => srcPair.split(' ')[0])
         // Get last (best quality)

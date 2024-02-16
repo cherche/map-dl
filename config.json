@@ -1,5 +1,5 @@
 {
-  "skipDownload": false,
+  "preferCache": false,
   "forceOutput": false,
   "keepDownloads": false,
   "formulaeDir": "./formulae",

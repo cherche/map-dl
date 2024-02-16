@@ -6,17 +6,19 @@ const { getMonthStamp } = require('./js/filename-utils')
 
 const config = require('./config.json')
 
-// If SKIP_DOWNLOAD is true, avoid all possible downloads
-// Output will be produced only for new downloads
+// If PREFER_CACHE is true, only download file
+// if file of same name does not already exist in cache.
 // This is great for debugging only specific downloads
-const SKIP_DOWNLOAD = config.skipDownload
+const PREFER_CACHE = config.preferCache
 // If FORCE_OUTPUT is true, emit an output regardless
-// of whether the download is new or not
+// of whether the download is new or not.
 // This is great for debugging output generators
 const FORCE_OUTPUT = config.forceOutput
-// Notice what this means if SKIP_DOWNLOAD and FORCE_OUTPUT are both true
+// Notice what this means if PREFER_CACHE and FORCE_OUTPUT are both true
 // In this case, every output is produced with no "unnecessary" downloads
 // This is great for debugging certain downloads AND their output generators
+// If KEEP_DOWNLOADS is true, the program will delete
+// downloads as soon as they are processed
 const KEEP_DOWNLOADS = config.keepDownloads
 
 // It is important that these paths are formatted correctly
@@ -38,8 +40,8 @@ fs.readdirSync(FORMULAE_DIR).forEach((formulaName) => {
 
 // We take downloadUrl separately because of the different structures
 // on formulae of type 'static' and type 'webscrape'.
-// Another, more hacky, way is to mutate the formula so that for 'webscrape's,
-//  formula.download.url = await await page.evaluate(formula.download.getUrl)
+// Another (hackier) approach for 'webscrape' is to mutate the formula so that
+// formula.download.url = await await page.evaluate(formula.download.getUrl)
 async function manageDownload ({ downloadUrl, dl, formula }) {
   const downloadIdStamp = (dl.omitId) ? '' : `-${dl.id}`
   const downloadName = `${formula.shortName}${downloadIdStamp}.${dl.extension}`
@@ -47,24 +49,19 @@ async function manageDownload ({ downloadUrl, dl, formula }) {
   const downloadPath = `${DOWNLOADS_DIR}/${downloadName}`
   const cachePath = `${CACHE_DIR}/${downloadName}`
 
-  let skipDownload = false
+  let preferCache = false
   let emitOutput = true
 
-  if (SKIP_DOWNLOAD) {
+  if (PREFER_CACHE) {
     try {
       await fsPromises.stat(cachePath)
-      log('Using available cache instead of downloading (skipDownload=true)', { formula, dl })
-      skipDownload = true
+      log('Using available cache instead of downloading (preferCache=true)', { formula, dl })
+      preferCache = true
       emitOutput = false
-    } catch (err) {
-      // Even if SKIP_DOWNLOAD is set to true, we will only skip download,
-      // if there it already exists in cache. This ensures it is possible
-      // to produce an output if desired.
-      // Really, SKIP_DOWNLOAD means "skip download if already in cache"
-    }
+    } catch (err) {}
   }
 
-  if (!skipDownload) {
+  if (!preferCache) {
     log('Downloading', { downloadUrl }, { formula, dl })
     try {
       await downloadPromise(downloadUrl, downloadPath)

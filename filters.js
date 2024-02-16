@@ -3,6 +3,10 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const tmp = require('tmp')
 
+async function nofilter({ input, output }) {
+  fs.renameSync(input, output, err => console.log(err))
+}
+
 async function pdftoppm ({
   input,
   output,
@@ -14,4 +18,4 @@ async function pdftoppm ({
   fs.renameSync(`${tmpPath}.png`, output, err => console.log(err))
 }
 
-module.exports = { pdftoppm }
+module.exports = { nofilter, pdftoppm }

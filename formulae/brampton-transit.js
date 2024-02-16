@@ -3,28 +3,23 @@ const filters = require('../filters')
 module.exports = {
   name: 'brampton-transit',
   shortName: 'BT',
-  site: 'https://www.brampton.ca/en/residents/transit/Pages/home.aspx',
+  site: 'https://www1.brampton.ca/EN/residents/transit/',
   type: 'webscrape',
-  scrapeUrl: 'https://www.brampton.ca/EN/residents/transit/plan-your-trip/Pages/Schedules-Maps-Covid.aspx',
+  scrapeUrl: 'https://www1.brampton.ca/EN/residents/transit/plan-your-trip/Pages/Schedules-and-Maps.aspx',
   downloads: [
     {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelectorAll('.jumbotron.transit .btn')[0].href
+        return document.querySelector('.card-body > .btn').href
       },
-      extension: 'pdf',
+      extension: 'jpg',
       outputs: [
         {
           id: 'default',
           omitId: true,
           generate: (input, output) => {
-            filters.pdftoppm({
-              input,
-              output,
-              page: 1,
-              resolution: 200
-            })
+            filters.nofilter({ input, output })
           }
         }
       ]

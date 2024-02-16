@@ -11,7 +11,9 @@ module.exports = {
       id: 'default',
       omitId: true,
       getUrl () {
-        return document.querySelectorAll('section.module-content-main a')[0].href
+        const query = 'section.module-content-main ul > li > a'
+        const anchors = [...document.querySelectorAll(query)]
+        return anchors.find(a => a.textContent === 'Weekday map').href
       },
       extension: 'pdf',
       outputs: [
@@ -32,7 +34,9 @@ module.exports = {
     {
       id: 'Express',
       getUrl () {
-        return document.querySelectorAll('section.module-content-main a')[1].href
+        const query = 'section.module-content-main ul > li > a'
+        const anchors = [...document.querySelectorAll(query)]
+        return anchors.find(a => a.textContent === 'Express weekday map').href
       },
       extension: 'pdf',
       outputs: [
@@ -53,7 +57,9 @@ module.exports = {
     {
       id: 'Saturday',
       getUrl () {
-        return document.querySelectorAll('section.module-content-main a')[2].href
+        const query = 'section.module-content-main ul > li > a'
+        const anchors = [...document.querySelectorAll(query)]
+        return anchors.find(a => a.textContent === 'Saturday map').href
       },
       extension: 'pdf',
       outputs: [
@@ -74,7 +80,9 @@ module.exports = {
     {
       id: 'Sunday',
       getUrl () {
-        return document.querySelectorAll('section.module-content-main a')[3].href
+        const query = 'section.module-content-main ul > li > a'
+        const anchors = [...document.querySelectorAll(query)]
+        return anchors.find(a => a.textContent === 'Sunday map').href
       },
       extension: 'pdf',
       outputs: [

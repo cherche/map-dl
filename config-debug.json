@@ -1,0 +1,9 @@
+{
+  "preferCache": false,
+  "forceOutput": false,
+  "keepDownloads": false,
+  "formulaeDir": "./formulae-debug",
+  "downloadsDir": "./downloads",
+  "cacheDir": "./cache",
+  "outputDir": "./output"
+}

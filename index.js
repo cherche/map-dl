@@ -4,7 +4,10 @@ const { log } = require('./js/loggers')
 const { downloadPromise } = require('./js/download')
 const { getMonthStamp } = require('./js/filename-utils')
 
-const config = require('./config.json')
+const argv = require('minimist')(process.argv.slice(2))
+
+CONFIG_PATH = argv.config || './config.json'
+const config = require(CONFIG_PATH)
 
 // If PREFER_CACHE is true, only download file
 // if file of same name does not already exist in cache.

@@ -1,6 +1,6 @@
 {
   "preferCache": false,
-  "forceOutput": false,
+  "forceOutput": true,
   "keepDownloads": false,
   "formulaeDir": "./formulae-debug",
   "downloadsDir": "./downloads",
